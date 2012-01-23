@@ -6,7 +6,7 @@ import scalaz._
 import Scalaz._
 import java.io.File
 import scala.io.Source
-import org.specs2.specification.Fragments
+import org.specs2.specification.Example
 
 package object sniff {
   implicit def snippetsToSniffer(snippets: CodeSnippets) = new Sniffer(snippets)
@@ -21,27 +21,25 @@ package sniff {
   case object Scala extends Language("scala")
   
   class Sniffer(snippets: CodeSnippets) {
-    import org.specs2.main.ArgumentsArgs._
     import org.specs2.specification.FragmentsBuilder._
     import MustMatchers._
 
-    def sniff(paths: String*): Fragments = {
-      val files = paths.map(path => getFileTree(new File(path))).reduce(_ ++ _)
-      sniff(files)
+    def sniff(paths: String*): Stream[Example] = {
+      sniff(paths
+          .map(path => getFileTree(new File(path)))
+          .reduce(_ ++ _)
+          .filter(file => !file.isDirectory && file.getName().endsWith(".%s".format(snippets.language.fileExtension))))
     }
 
-    def sniff(files: Stream[File]): Fragments = {
-      var lineNum = 0
-      def filter(file: File) = !file.isDirectory && file.getName().endsWith(".%s".format(snippets.language.fileExtension))
-      val smells = for {
-        file <- files if filter(file) ensuring { lineNum = 0; true }
-        line <- Source.fromFile(file).getLines()
-        snippet <- snippets.snippets
-      } yield "%s:%s: failed snippet '%s' (%s)".format(file.getAbsolutePath(), lineNum, snippet.regex, snippet.rationale) ! { line must not be =~(snippet.regex.toString) } ensuring { lineNum = lineNum + 1; true }
+    def sniff(files: Stream[File]) = for {
+      file <- files
+      snippet <- snippets.snippets
+    } yield "%s smells ok".format(file.getAbsolutePath()) ! examples(file, snippet).reduce(_ and _)
 
-      args(showOnly = "x!o*-1") ^ smells 
-    }
-
+    private def examples(file: File, snippet: Smell) = for {
+      (line, lineNum) <- Source.fromFile(file).getLines().zipWithIndex 
+    } yield line aka failureMsg(snippet, file, lineNum + 1) must not be =~(snippet.regex.toString) 
+    private def failureMsg(smell: Smell, file: File, line: Int) = "%s:%s: failed snippet '%s' (%s)".format(file.getAbsolutePath(), line, smell.regex, smell.rationale) 
     private def getFileTree(f: File): Stream[File] = f #:: (if (f.isDirectory) f.listFiles().toStream.flatMap(getFileTree) else Stream.empty)
   }
 }
