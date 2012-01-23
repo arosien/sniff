@@ -57,5 +57,6 @@ If I add the string "java.net.URL" to the above code (to make the smell spec fai
 
 TODO:
 
+* Mark certain files as exceptions to the rules.
 * More example smells, for other languages too.
 * Executable jar to sniff stuff from the command-line.
