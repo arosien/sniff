@@ -14,6 +14,7 @@ package object sniff {
 
   implicit def snippetsToSniffer(snippets: CodeSnippets)(implicit ignore: Ignores = Ignores()) = new Sniffer(snippets)
   implicit def langToFilter(lang: Language) = { file: File => !file.isDirectory && file.getName().endsWith(".%s".format(lang.fileExtension)) }
+  implicit def filenamesToFilter(named: FilesNamed) = { file: File => !file.isDirectory && named.filenames.exists(_ == file.getName()) }
 }
 
 package sniff {
@@ -27,6 +28,8 @@ package sniff {
   case object Scala extends Language("scala")
   case object Java extends Language("java")
   case object Php extends Language("php")
+  
+  case class FilesNamed(filenames: String*)
   
   class Sniffer(snippets: CodeSnippets)(implicit ignore: Ignores) {
     import org.specs2.specification.FragmentsBuilder._
@@ -45,7 +48,7 @@ package sniff {
           !ignore.ignores.exists(e => 
             e.id == snippet.id && 
             e.paths.exists(file.getAbsolutePath().endsWith(_)))
-    } yield "%s smells ok (%s)".format(file.getAbsolutePath(), snippet.id) ! examples(file, snippet).reduce(_ and _)
+    } yield "%s smells ok (%s)".format(file.getAbsolutePath(), snippet.id.name) ! examples(file, snippet).reduce(_ and _)
 
     private def examples(file: File, snippet: Smell) = for {
       (line, lineNum) <- Source.fromFile(file).getLines().zipWithIndex 
