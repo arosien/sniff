@@ -1,4 +1,4 @@
-Keeps your code fresh smelling.
+Keeps your code fresh smelling: generate bad code smells specs2 specifications for any source language.
 
 ```scala
 import org.specs2.Specification
