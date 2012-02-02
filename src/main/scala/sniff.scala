@@ -11,15 +11,16 @@ import org.specs2.specification.Example
 package object sniff {
   type SmellId = Symbol
   type Path = String
+  type FileFilter = File => Boolean
 
   implicit def snippetsToSniffer(snippets: CodeSnippets)(implicit ignore: Ignores = Ignores()) = new Sniffer(snippets)
-  implicit def langToFilter(lang: Language) = { file: File => !file.isDirectory && file.getName().endsWith(".%s".format(lang.fileExtension)) }
-  implicit def filenamesToFilter(named: FilesNamed) = { file: File => !file.isDirectory && named.filenames.exists(_ == file.getName()) }
+  implicit def langToFilter(lang: Language): FileFilter = { file: File => !file.isDirectory && file.getName().endsWith(".%s".format(lang.fileExtension)) }
+  implicit def filenamesToFilter(named: FilesNamed): FileFilter = { file: File => !file.isDirectory && named.filenames.exists(_ == file.getName()) }
 }
 
 package sniff {
 
-  case class CodeSnippets(filter: File => Boolean, snippets: Smell*)
+  case class CodeSnippets(filter: FileFilter, snippets: Smell*)
   case class Smell(id: SmellId, regex: Regex, rationale: String)
   case class Ignores(ignores: Ignore*)
   case class Ignore(id: SmellId, paths: Path*)

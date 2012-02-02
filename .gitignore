@@ -2,4 +2,6 @@ target/
 .cache
 .classpath
 .project
-project/*
+.settings/
+project/target
+project/boot
