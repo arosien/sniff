@@ -63,6 +63,11 @@ implicit val ignore = Ignores(
       Ignore('NoURL, "src/test/scala/SniffSpec.scala"))
 ```
 
+CREDITS:
+
+* `BadCodeSnippetsTestRunner` from https://github.com/wealthfront/kawala, probably inspired by Google.
+
+
 TODO:
 
 * More example smells, for other languages too.
