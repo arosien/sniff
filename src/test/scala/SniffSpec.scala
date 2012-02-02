@@ -7,9 +7,11 @@ import org.specs2.reporter.Reporter
 import org.specs2.reporter.NotifierReporter
 import org.specs2.execute.Details
 import org.specs2.matcher.MustThrownMatchers
+import java.io.File
 
 class SniffSpec extends Specification with MustThrownMatchers {
   def is = 
+      "Scala Language converts to snippets"      ! snippets().langConvertsToSnippets ^
       "Scala snippets should pass"               ! snippets().allPass ^
       "Snippets without ignores fails for NoURL" ! snippets().oneFailsWithoutIgnores ^
       "FilesNamed scans specific file"           ! snippets().filesNamed
@@ -38,9 +40,6 @@ class SniffSpec extends Specification with MustThrownMatchers {
   }
 
   case class snippets() {
-    val scalaSnippets = CodeSnippets(Scala,
-        Smell('NoURL, """java\.net\.URL""".r, rationale = "URL actually resolves hostnames over the network, use java.net.URI instead"))
-
     val logback = CodeSnippets(FilesNamed("logback.xml"),
         Smell('NoMethodNameLogging, """%M""".r, "%M is an expensive logging option"))
 
@@ -49,22 +48,24 @@ class SniffSpec extends Specification with MustThrownMatchers {
     }
   
     val runner = new CollectingSpecRunner
-    val numFiles = 2
+    val numFiles = getFileTree(new File("src/main/scala")).filter(Scala).size + getFileTree(new File("src/test/scala")).filter(Scala).size
+    
+    def langConvertsToSnippets = Scala.snippets.smells must not be empty
     
     def allPass = {
       // import java.net.URL <-- should be ignored from the clause below:
       implicit val ignores = Ignores(Ignore('NoURL, "src/test/scala/SniffSpec.scala"))
-      runner(spec(scalaSnippets, "src/main/scala", "src/test/scala")) must beRight
-      runner.successes must have size(scalaSnippets.snippets.size * numFiles - 1)
+      runner(spec(Scala.snippets, "src/main/scala", "src/test/scala")) must beRight
       runner.fails must beEmpty
+      runner.successes must have size(Scala.snippets.smells.size * numFiles - 1)
     }
     
     def oneFailsWithoutIgnores = {
       implicit val ignores = Ignores()
-      runner(spec(scalaSnippets, "src/main/scala", "src/test/scala")) must beRight
-      runner.successes must have size(scalaSnippets.snippets.size * numFiles - 1)
+      runner(spec(Scala.snippets, "src/main/scala", "src/test/scala")) must beRight
       runner.fails must have size(1)
       runner.fails must containMatch("NoURL") and have containMatch("src/test/scala/SniffSpec.scala")
+      runner.successes must have size(Scala.snippets.smells.size * numFiles - 1)
     }
     
     def filesNamed = {
