@@ -61,7 +61,7 @@ If I add the string "java.net.URL" to the above code (to make the smell spec fai
 
 If there are bad smells that you temporarily want to ignore you can define an implicit `Ignores`` value:
 
-```
+```scala
 // snippets.sniff() uses this implicit
 implicit val ignore = Ignores(
       Ignore('NoURL, "src/test/scala/SniffSpec.scala"),
