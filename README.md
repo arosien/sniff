@@ -1,5 +1,7 @@
 Keeps your code fresh smelling: generate bad code smells specs2 specifications for any source language.
 
+# Usage
+
 ```scala
 import org.specs2.Specification
 
@@ -7,7 +9,9 @@ class SniffSpec extends Specification {
   import net.rosien.sniff._
     
   val snippets = CodeSnippets(Scala,
-    Smell('NoURL, """java\.net\.URL""".r, rationale = "URL actually resolves hostnames over the network, use java.net.URI instead"))
+    Smell('NoSystemProps, """System\.\w+Property\(""".r,      rationale = "Use Scala-idomatic sys.props object")),
+    Smell('NoSysErrOrOut, """\bSystem\.(err|out)\.print""".r, rationale = "Use a logger"),
+    Smell('NoURL,         """java\.net\.URL""".r,             rationale = "URL actually resolves hostnames over the network, use java.net.URI instead"))
               
   def is = "Code shouldn't smell" ^ snippets.sniff("src/main/scala", "src/test/scala")
 }
@@ -60,15 +64,30 @@ If there are bad smells that you temporarily want to ignore you can define an im
 ```
 // snippets.sniff() uses this implicit
 implicit val ignore = Ignores(
-      Ignore('NoURL, "src/test/scala/SniffSpec.scala"))
+      Ignore('NoURL, "src/test/scala/SniffSpec.scala"),
+      ...)
 ```
 
-CREDITS:
+# Regular Expressions? WTF!?
+
+There are lots of ways to model "bad code smells", from simple rules to deep language parsing.  `sniff` emphasizes:
+
+* smells as regular expressions, because they are easy to write and test for any source language
+* broadly scoped smells rather than complex predicates ("never use X")
+* a simple exception mechanism to ignore false positives
+
+For more complex rules and deeper analysis, try these great tools:
+
+* [PMD](http://pmd.sourceforge.net/)
+* [FindBugs](http://findbugs.sourceforge.net/)
+
+# Credits
 
 * `BadCodeSnippetsTestRunner` from https://github.com/wealthfront/kawala, probably inspired by Google.
+* `specs2` specifications from etorreborre at http://etorreborre.github.com/specs2.
 
+# Todo
 
-TODO:
-
-* More example smells, for other languages too.
-* Executable jar to sniff stuff from the command-line.
+* More example smells, for other languages too, with tagged groupings and ways to choose from tags.
+* Magic token to ignore smells on a line or in a region, e.g., for use in commented-out code.
+* Executable jar to sniff stuff from the command-line, e.g., for use in continuous integration systems.
