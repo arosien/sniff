@@ -8,12 +8,7 @@ import org.specs2.Specification
 class SniffSpec extends Specification { 
   import net.rosien.sniff._
     
-  val snippets = CodeSnippets(Scala,
-    Smell('NoSystemProps, """System\.\w+Property\(""".r,      rationale = "Use Scala-idomatic sys.props object")),
-    Smell('NoSysErrOrOut, """\bSystem\.(err|out)\.print""".r, rationale = "Use a logger"),
-    Smell('NoURL,         """java\.net\.URL""".r,             rationale = "URL actually resolves hostnames over the network, use java.net.URI instead"))
-              
-  def is = "Code shouldn't smell" ^ snippets.sniff("src/main/scala", "src/test/scala")
+  def is = "Scala code shouldn't smell" ^ Scala.snippets.sniff("src/main/scala", "src/test/scala")
 }
 ```
 
@@ -67,6 +62,23 @@ implicit val ignore = Ignores(
       Ignore('NoURL, "src/test/scala/SniffSpec.scala"),
       ...)
 ```
+# Defining your own smells
+
+```scala
+import net.rosien.sniff._
+    
+val mySmells = 
+  Smell('NoMutableCollections, """scala\.collection\.mutable""".r, rationale = "Immutable is better than mutable. - El Jefe", Scala, 'MovieReferences) ::
+  // more smells
+  Nil
+}
+```
+
+There is a growing list of default smells for various languages defined at 
+https://github.com/arosien/sniff/blob/master/src/main/scala/smells.scala. 
+Please fork and send me a pull request to have yours included.
+
+To define a new language just create a singleton object extending `net.rosien.sniff.Language`.
 
 # Regular Expressions? WTF!?
 
@@ -88,6 +100,5 @@ For more complex rules and deeper analysis, try these great tools:
 
 # Todo
 
-* More example smells, for other languages too, with tagged groupings and ways to choose from tags.
 * Magic token to ignore smells on a line or in a region, e.g., for use in commented-out code.
 * Executable jar to sniff stuff from the command-line, e.g., for use in continuous integration systems.
