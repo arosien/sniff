@@ -58,12 +58,13 @@ package sniff {
           !ignore.ignores.exists(e =>  
             e.id == smell.id && 
             e.paths.exists(file.getAbsolutePath().endsWith(_)))
-    } yield "%s should smell ok (%s)".format(file.getAbsolutePath(), smell.id.name) ! examples(file, smell).reduce(_ and _)
+    } yield "%s should smell ok (%s: %s)".format(file.getAbsolutePath(), smell.id.name, smell.tags.mkString(", ")) ! 
+        examples(file, smell).reduce(_ and _)
 
     private def examples(file: File, smell: Smell) = for {
       (line, lineNum) <- Source.fromFile(file).getLines().zipWithIndex 
     } yield line aka failureMsg(smell, file, lineNum + 1) must not be =~(smell.regex.toString) 
     
-    private def failureMsg(smell: Smell, file: File, line: Int) = "%s:%s: failed snippet '%s' (%s)".format(file.getAbsolutePath(), line, smell.regex, smell.rationale)
+    private def failureMsg(smell: Smell, file: File, line: Int) = "failed snippet %s at %s:%s (%s)".format(smell.id.name, file.getAbsolutePath(), line, smell.rationale)
   }
 }
