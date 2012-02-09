@@ -9,19 +9,18 @@ import org.specs2.execute.Details
 import org.specs2.matcher.MustThrownMatchers
 import java.io.File
 
+class MetaSpec extends Specification {
+  implicit val ignores = Ignores(Ignore('NoURL, "src/test/scala/SniffSpec.scala"))
+  def is = "Sniff should not smell" ^ Scala.snippets.sniff("src/main/scala", "src/test/scala")
+}
+
 class SniffSpec extends Specification with MustThrownMatchers {
-  val ignores = Ignores(Ignore('NoURL, "src/test/scala/SniffSpec.scala"))
-  
   def is = "Sniff should" ^
-      "not have any Scala smells itself" ^ 
-        Scala.snippets.sniff("src/main/scala", "src/test/scala")(ignores) ^
-        end ^
-      "and" ^
-        "Scala Language converts to snippets"      ! snippets().langConvertsToSnippets ^
-        "Scala snippets should pass"               ! snippets().allPass ^
-        "Snippets without ignores fails for NoURL" ! snippets().oneFailsWithoutIgnores ^
-        "FilesNamed scans specific file"           ! snippets().filesNamed ^
-        end
+      "Scala Language converts to snippets"      ! snippets().langConvertsToSnippets ^
+      "Scala snippets should pass"               ! snippets().allPass ^
+      "Snippets without ignores fails for NoURL" ! snippets().oneFailsWithoutIgnores ^
+      "FilesNamed scans specific file"           ! snippets().filesNamed ^
+                                                   end
   
   // TODO: I'm sure there's a better way to do this.
   class CollectingSpecRunner extends ClassRunner with Notifier {
@@ -62,7 +61,7 @@ class SniffSpec extends Specification with MustThrownMatchers {
     
     def allPass = {
       // import java.net.URL <-- should be ignored from the clause below:
-      implicit val ignores = SniffSpec.this.ignores
+      implicit val ignores = Ignores(Ignore('NoURL, "src/test/scala/SniffSpec.scala"))
       runner(spec(Scala.snippets, "src/main/scala", "src/test/scala")) must beRight
       runner.fails must_== 0
       runner.skipped must_== 1

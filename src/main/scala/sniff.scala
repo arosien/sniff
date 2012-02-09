@@ -6,7 +6,10 @@ import scalaz._
 import Scalaz._
 import java.io.File
 import scala.io.Source
+import org.specs2.Specification
 import org.specs2.specification.Example
+import org.specs2.specification.Fragments
+import org.specs2.SpecificationFeatures
 
 package object sniff {
   type SmellId = Symbol
@@ -43,23 +46,25 @@ package sniff {
   
   case class FilesNamed(filenames: String*)
   
-  class Sniffer(snippets: CodeSnippets) {
+  class Sniffer(snippets: CodeSnippets) extends SpecificationFeatures {
     import org.specs2.specification.FragmentsBuilder._
     import MustMatchers._
 
-    def sniff(paths: Path*)(implicit ignore: Ignores = Ignores()): Stream[Example] = {
+    def sniff(paths: Path*)(implicit ignore: Ignores = Ignores()): Fragments = {
       sniff(paths
           .map(path => getFileTree(new File(path)))
           .reduce(_ ++ _)
-          .filter(!_.isDirectory()))
+          .filter(!_.isDirectory())).foldLeft(Fragments())(_ ^ _ ^ p)
     }
 
-    def sniff(files: Stream[File])(implicit ignore: Ignores) = for {
+    def sniff(files: Stream[File])(implicit ignore: Ignores): Stream[Fragments] = for {
       file <- files if snippets.filter(file)
-      smell <- snippets.smells
-    } yield "%s should smell ok (%s: %s)".format(file.getAbsolutePath(), smell.id.name, smell.tags.mkString(", ")) ! 
-        examples(file, smell, ignore).reduce(_ and _)
+    } yield "%s should smell ok".format(file.getAbsolutePath()) ^ sniff(file)
 
+    def sniff(file: File)(implicit ignore: Ignores): Seq[Example] = for {
+      smell <- snippets.smells
+    } yield "%s (%s)".format(smell.id.name, smell.tags.mkString(", ")) ! examples(file, smell, ignore).reduce(_ and _)
+        
     private def examples(file: File, smell: Smell, ignore: Ignores) = for {
       (line, lineNum) <- Source.fromFile(file).getLines().zipWithIndex 
     } yield {
