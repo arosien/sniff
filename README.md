@@ -65,12 +65,17 @@ implicit val ignore = Ignores(
 # Defining your own smells
 
 ```scala
+import org.specs2.Specification
 import net.rosien.sniff._
     
 val mySmells = 
-  Smell('NoMutableCollections, """scala\.collection\.mutable""".r, rationale = "Immutable is better than mutable. - El Jefe", Scala, 'MovieReferences) ::
+  Smell('NoMutableCollections, """scala\.collection\.mutable""".r, rationale = "Immutable is better than mutable. - El Jefe", Scala, 'movieReferences) ::
   // more smells
   Nil
+}
+
+class SniffSpec extends Specification { 
+  def is = "Die smells die" ^ CodeSnippets(Scala, smells: _*).sniff("src/main/scala", "src/test/scala")
 }
 ```
 
