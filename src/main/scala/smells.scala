@@ -1,10 +1,14 @@
 package net.rosien.sniff
 
+import scala.math.Ordering
+
 object Smells {
   private implicit def langToTag(lang: Language): Tag = lang.tag
   private val * = '*
   
-  def withTags(f: Seq[Symbol] => Boolean) = smells.filter(smell => smell.tags.contains(*) || f(smell.tags))
+  implicit val smellIdOrdering: Ordering[SmellId] = Ordering.by(_.name)
+  
+  def withTags(f: Seq[Symbol] => Boolean) = smells.filter(smell => smell.tags == Seq(*) || f(smell.tags)).sortBy(_.id)
   
   val smells =
       // Scala
