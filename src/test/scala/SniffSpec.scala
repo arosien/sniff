@@ -10,11 +10,18 @@ import org.specs2.matcher.MustThrownMatchers
 import java.io.File
 
 class SniffSpec extends Specification with MustThrownMatchers {
-  def is = 
-      "Scala Language converts to snippets"      ! snippets().langConvertsToSnippets ^
-      "Scala snippets should pass"               ! snippets().allPass ^
-      "Snippets without ignores fails for NoURL" ! snippets().oneFailsWithoutIgnores ^
-      "FilesNamed scans specific file"           ! snippets().filesNamed
+  val ignores = Ignores(Ignore('NoURL, "src/test/scala/SniffSpec.scala"))
+  
+  def is = "Sniff should" ^
+      "not have any Scala smells itself" ^ 
+        Scala.snippets.sniff("src/main/scala", "src/test/scala")(ignores) ^
+        end ^
+      "and" ^
+        "Scala Language converts to snippets"      ! snippets().langConvertsToSnippets ^
+        "Scala snippets should pass"               ! snippets().allPass ^
+        "Snippets without ignores fails for NoURL" ! snippets().oneFailsWithoutIgnores ^
+        "FilesNamed scans specific file"           ! snippets().filesNamed ^
+        end
   
   // TODO: I'm sure there's a better way to do this.
   class CollectingSpecRunner extends ClassRunner with Notifier {
@@ -23,8 +30,9 @@ class SniffSpec extends Specification with MustThrownMatchers {
     }
     
     import scala.collection.mutable
-    val successes = mutable.Set[String]()
-    val fails     = mutable.Set[String]()
+    var successes = 0
+    var fails     = 0
+    var skipped   = 0
 
     def specStart(title: String, location: String) {}
     def specEnd(title: String, location: String) {}
@@ -32,10 +40,10 @@ class SniffSpec extends Specification with MustThrownMatchers {
     def contextEnd(text: String, location: String) {}
     def text(text: String, location: String) {}
     def exampleStarted(name: String, location: String) {}
-    def exampleSuccess(name: String, duration: Long) = successes += name
-    def exampleFailure(name: String, message: String, location: String, f: Throwable, details: Details, duration: Long) = fails += name
+    def exampleSuccess(name: String, duration: Long) = successes += 1
+    def exampleFailure(name: String, message: String, location: String, f: Throwable, details: Details, duration: Long) = fails += 1
     def exampleError  (name: String, message: String, location: String, f: Throwable, duration: Long) {}
-    def exampleSkipped(name: String, message: String, duration: Long) {}
+    def exampleSkipped(name: String, message: String, duration: Long) = skipped += 1
     def examplePending(name: String, message: String, duration: Long) {}
   }
 
@@ -54,26 +62,27 @@ class SniffSpec extends Specification with MustThrownMatchers {
     
     def allPass = {
       // import java.net.URL <-- should be ignored from the clause below:
-      implicit val ignores = Ignores(Ignore('NoURL, "src/test/scala/SniffSpec.scala"))
+      implicit val ignores = SniffSpec.this.ignores
       runner(spec(Scala.snippets, "src/main/scala", "src/test/scala")) must beRight
-      runner.fails must beEmpty
-      runner.successes must have size(Scala.snippets.smells.size * numFiles - 1)
+      runner.fails must_== 0
+      runner.skipped must_== 1
+      runner.successes must_== Scala.snippets.smells.size * numFiles - 1
     }
     
     def oneFailsWithoutIgnores = {
-      implicit val ignores = Ignores()
+      implicit val ignores = Ignores() // Don't ignore URL in comment above
       runner(spec(Scala.snippets, "src/main/scala", "src/test/scala")) must beRight
-      runner.fails must have size(1)
-      runner.fails must containMatch("NoURL") and have containMatch("src/test/scala/SniffSpec.scala")
-      runner.successes must have size(Scala.snippets.smells.size * numFiles - 1)
+      runner.fails must_== 1
+      runner.skipped must_== 0
+      runner.successes must_== Scala.snippets.smells.size * numFiles - 1
     }
     
     def filesNamed = {
       implicit val ignores = Ignores()
       runner(spec(logback, "src/test/resources")) must beRight
-      runner.successes must beEmpty
-      runner.fails must have size(1)
-      runner.fails must containMatch("NoMethodNameLogging") and have containMatch("src/test/resources/logback.xml")
+      runner.successes must_== 0
+      runner.fails must_== 1
+      runner.skipped must_== 0
     }
     
   }
