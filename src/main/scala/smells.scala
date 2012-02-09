@@ -23,14 +23,14 @@ object Smells {
       /*
        * Java, or calling Java from Scala
        */
-      Smell('NoSystemOutOrErr,    """\bSystem\.(out|err)\.print""".r, "Use a logger",                                              Java, Scala) ::
-      Smell('NoURL,               """\bjava\.net\.URL\b""".r, "URL resolves hostnames over the network, use java.net.URI instead", Java, Scala) ::
-      Smell('UseLogicalClock,     """System\.currentTimeMillis""".r, "Use a logical clock, otherwise it's hard to test",           Java, Scala) ::
-      Smell('NoDefaultSuperCtors, """super\(\)""".r, "Never call a default super constructor",                                     Java, Scala) ::
-      Smell('NoThreadSleep,       """Thread.sleep\(""".r, "Sleep when you're dead",                                                Java, Scala) ::
-      Smell('NoThreadSleep,       """import\s*static\s*java.lang.Thread.sleep""".r, "Sleep when you're dead",                      Java, Scala) ::
-      Smell('UseStringEquals,     """==\s*\"""".r, "always compare strings via String#equals(String)",                             Java) ::
-      Smell('UseStringEquals,     """"\s*== """.r, "always compare strings via String#equals(String)",                             Java) ::
+      Smell('NoSystemOutOrErr,    """\bSystem\.(out|err)\.print""".r, "Use a logger",                                                      Java, Scala) ::
+      Smell('NoURL,               """\bjava\.net\.URL\b""".r,         "URL resolves hostnames over the network, use java.net.URI instead", Java, Scala) ::
+      Smell('UseLogicalClock,     """System\.currentTimeMillis""".r,  "Use a logical clock, otherwise it's hard to test",                  Java, Scala) ::
+      Smell('NoDefaultSuperCtors, """super\(\)""".r,                  "Never call a default super constructor",                            Java, Scala) ::
+      Smell('NoThreadSleep,       """Thread.sleep\(""".r,             "Sleep when you're dead",                                            Java, Scala) ::
+      Smell('NoThreadSleep,       """import\s*static\s*java.lang.Thread.sleep""".r, "Sleep when you're dead",                              Java, Scala) ::
+      Smell('UseStringEquals,     """==\s*\"""".r,                    "always compare strings via String#equals(String)",                  Java) ::
+      Smell('UseStringEquals,     """"\s*== """.r,                    "always compare strings via String#equals(String)",                  Java) ::
       /*
        * Formatting
        */
