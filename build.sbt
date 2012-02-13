@@ -1,3 +1,7 @@
+import sbtrelease.Release._
+
+seq(releaseSettings: _*)
+
 organization := "net.rosien"
 
 name := "sniff"
