@@ -126,7 +126,7 @@ For more complex rules and deeper analysis, try these great tools:
 * `BadCodeSnippetsTestRunner` from https://github.com/wealthfront/kawala, probably inspired by Google.
 * `specs2` specifications from etorreborre at http://etorreborre.github.com/specs2.
 
-# Todo
+# TODO
 
 * Magic token to ignore smells on a line or in a region, e.g., for use in commented-out code.
 * Executable jar to sniff stuff from the command-line, e.g., for use in continuous integration systems.
