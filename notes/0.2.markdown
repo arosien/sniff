@@ -1,0 +1,4 @@
+Initial release:
+
+* Generates specs2 "bad code smell" specifications derived from language-specific patterns.
+* Sample smells for Scala and Java included.
