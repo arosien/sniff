@@ -1,5 +1,28 @@
 Keeps your code fresh smelling: generate bad code smells specs2 specifications for any source language.
 
+# Installation
+
+`sniff` is available via the Maven Central repository and current supports Scala 2.9.0-1 and 2.9.1.
+
+sbt:
+
+```scala
+libraryDependencies ++= Seq(
+  "net.rosien" %% "sniff" % "0.2" % "test"
+) 
+```
+
+maven:
+
+```xml
+ <dependency>
+  <groupId>net.rosien</groupId>
+  <artifactId>sniff_2.9.1</artifactId> 
+  <version>0.2</version>
+  <scope>test</scope>
+</dependency>
+```
+
 # Usage
 
 ```scala
