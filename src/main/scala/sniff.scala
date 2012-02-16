@@ -69,10 +69,10 @@ package sniff {
       (line, lineNum) <- Source.fromFile(file).getLines().zipWithIndex 
     } yield {
       val matchingRegex = =~(smell.regex.toString)
-      line aka failureMsg(smell, file, lineNum + 1) must not be (ignored(file, smell)(ignore) ? matchingRegex.orSkip("ignored") | matchingRegex)
+      line aka failureMsg(smell, file, lineNum + 1) must not be (ignored(ignore, file, smell) ? matchingRegex.orSkip("ignored") | matchingRegex)
     }
     
-    private def ignored(file: File, smell: Smell)(implicit ignore: Ignores) = ignore.ignores.exists(_.ignores(smell, file)) 
+    private def ignored(ignore: Ignores, file: File, smell: Smell) = ignore.ignores.exists(_.ignores(smell, file)) 
     
     private def failureMsg(smell: Smell, file: File, line: Int) = "failed snippet %s at %s:%s (%s)".format(smell.id.name, file.getAbsolutePath(), line, smell.rationale)
   }
