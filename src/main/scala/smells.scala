@@ -34,6 +34,9 @@ object Smells {
       /*
        * Formatting
        */
-      Smell('NoLongLines, """.{200,}""".r, "Your line is too long, make it shorter", *) ::
+      Smell('NoLongLines, """[^\n]{200,}""".r, "Your line is too long, make it shorter", *) ::
+      /*
+       * THE END
+       */
       Nil
 }

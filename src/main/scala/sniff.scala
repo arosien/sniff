@@ -10,6 +10,8 @@ import org.specs2.Specification
 import org.specs2.specification.Example
 import org.specs2.specification.Fragments
 import org.specs2.SpecificationFeatures
+import org.specs2.execute.Skipped
+import org.specs2.execute.Result
 
 package object sniff {
   type SmellId = Symbol
@@ -17,6 +19,15 @@ package object sniff {
   type FileFilter = File => Boolean
   type Tag = Symbol
 
+  /**
+   * {{{
+   *   val file: File
+   *   val smell: Smell
+   *   (file, smell) must smellNice
+   * }}}
+   */
+  def smellNice: Matcher[FileSmell] = new SmellsNiceMatcher
+  
   implicit def snippetsToSniffer(snippets: CodeSnippets) = new Sniffer(snippets)
   
   implicit def langToFilter(lang: Language): FileFilter = { file: File => !file.isDirectory && file.getName().endsWith(".%s".format(lang.fileExtension)) }
@@ -28,15 +39,19 @@ package object sniff {
   implicit def filenamesToFilter(named: FilesNamed): FileFilter = { file: File => !file.isDirectory && named.filenames.exists(_ == file.getName()) }
   
   private[sniff] def getFileTree(f: File): Stream[File] = f #:: (if (f.isDirectory) f.listFiles().toStream.flatMap(getFileTree) else Stream.empty)
+
+  implicit def fileSmellMatcherToPairMatcher(matcher: Matcher[FileSmell]): Matcher[(File, Smell)] = matcher ^^ { fs: (File, Smell) => FileSmell(fs._1, fs._2) }  
 }
 
 package sniff {
 
   case class CodeSnippets(filter: FileFilter, smells: Smell*)
   case class Smell(id: SmellId, regex: Regex, rationale: String, tags: Tag*)
-  case class Ignores(ignores: Ignore*)
+  case class Ignores(ignores: Ignore*) {
+    def ignore(smell: Smell, file: File): Boolean = ignores.find(_.ignore(smell, file)).isDefined
+  }
   case class Ignore(id: SmellId, paths: Path*) {
-    def ignores(smell: Smell, file: File) = id == smell.id && paths.exists(file.getAbsolutePath().endsWith(_))
+    def ignore(smell: Smell, file: File) = id == smell.id && paths.exists(file.getAbsolutePath().endsWith(_))
   }
 
   abstract class Language(val fileExtension: String, val tag: Tag)
@@ -45,6 +60,22 @@ package sniff {
   case object Php extends Language("php", 'Php)
   
   case class FilesNamed(filenames: String*)
+  
+  case class FileSmell(file: File, smell: Smell)
+    
+  private[sniff] class SmellsNiceMatcher extends Matcher[FileSmell] {
+    def apply[FS <: FileSmell](s: Expectable[FS]) = {
+      val found = findSmell(s.value)
+      result(!found.isDefined,
+          s.description + " is ok",
+          failureMsg(s.value.smell, s.value.file, found.map(_._2 + 1).getOrElse(-1)),
+          s)
+    }
+
+    private def findSmell(fs: FileSmell) = lines(fs.file).find(l => fs.smell.regex.findFirstIn(l._1).isDefined)
+    private def lines(file: File) = Source.fromFile(file).getLines.zipWithIndex
+    private def failureMsg(smell: Smell, file: File, line: Int) = "failed snippet %s at %s:%s (%s)".format(smell.id.name, file.getAbsolutePath(), line, smell.rationale)
+  }
   
   class Sniffer(snippets: CodeSnippets) extends SpecificationFeatures {
     import org.specs2.specification.FragmentsBuilder._
@@ -63,17 +94,12 @@ package sniff {
 
     def sniff(file: File)(implicit ignore: Ignores): Seq[Example] = for {
       smell <- snippets.smells
-    } yield "%s (%s)".format(smell.id.name, smell.tags.mkString(", ")) ! examples(file, smell, ignore).reduce(_ and _)
-        
-    private def examples(file: File, smell: Smell, ignore: Ignores) = for {
-      (line, lineNum) <- Source.fromFile(file).getLines().zipWithIndex 
     } yield {
-      val matchingRegex = =~(smell.regex.toString)
-      line aka failureMsg(smell, file, lineNum + 1) must not be (ignored(ignore, file, smell) ? matchingRegex.orSkip("ignored") | matchingRegex)
+      val description = "%s (%s)".format(smell.id.name, smell.tags.mkString(", "))
+      
+      if (ignore.ignore(smell, file)) description ! skipped
+      else description ! ((file, smell) must smellNice) 
     }
     
-    private def ignored(ignore: Ignores, file: File, smell: Smell) = ignore.ignores.exists(_.ignores(smell, file)) 
-    
-    private def failureMsg(smell: Smell, file: File, line: Int) = "failed snippet %s at %s:%s (%s)".format(smell.id.name, file.getAbsolutePath(), line, smell.rationale)
   }
 }

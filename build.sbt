@@ -11,7 +11,7 @@ scalaVersion := "2.9.1"
 crossScalaVersions := Seq("2.9.0-1", "2.9.1")
 
 libraryDependencies ++= Seq(
-  "org.specs2" %% "specs2" % "1.7.1",
+  "org.specs2" %% "specs2" % "1.8.2",
   "org.scalaz" %% "scalaz-core" % "6.0.3"
 )
 
@@ -51,3 +51,5 @@ pomExtra :=
       <url>http://rosien.net</url>
     </developer>
   </developers>
+
+testOptions in Test += Tests.Argument("resetstore", "neverstore")
