@@ -14,7 +14,8 @@ object Smells {
       /*
        * Scala
        */
-      Smell('NoSystemProperties, """System\.\w+Property\(""".r, "Use Scala-idomatic sys.props object", Scala) ::
+      Smell('NoSystemProperties,         """System\.\w+Property\(""".r, "Use Scala-idomatic sys.props object", Scala) ::
+      Smell('NoJavaDeprecatedAnnotation, """@Deprecated""".r,           "Use Scala's @deprecated, not Java's", Scala) ::
       /*
        * Scala testing
        */
