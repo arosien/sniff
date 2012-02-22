@@ -9,8 +9,14 @@ import org.specs2.execute.Details
 import org.specs2.matcher.MustThrownMatchers
 import java.io.File
 
+object SniffIgnores {
+  implicit val ignores = Ignores(
+      Ignore('NoURL, "src/test/scala/SniffSpec.scala"),
+      Ignore('NoJavaDeprecatedAnnotation, "src/main/scala/smells.scala"))
+}
+
 class MetaSpec extends Specification {
-  implicit val ignores = Ignores(Ignore('NoURL, "src/test/scala/SniffSpec.scala"))
+  import SniffIgnores._
   def is = "Sniff should not smell" ^ Scala.snippets.sniff("src/main/scala", "src/test/scala")
 }
 
@@ -61,19 +67,19 @@ class SniffSpec extends Specification with MustThrownMatchers {
     
     def allPass = {
       // import java.net.URL <-- should be ignored from the clause below:
-      implicit val ignores = Ignores(Ignore('NoURL, "src/test/scala/SniffSpec.scala"))
+      import SniffIgnores._
       runner(spec(Scala.snippets, "src/main/scala", "src/test/scala"))
       runner.fails must_== 0
-      runner.skipped must_== 1
-      runner.successes must_== Scala.snippets.smells.size * numFiles - 1
+      runner.skipped must_== 2
+      runner.successes must_== Scala.snippets.smells.size * numFiles - runner.skipped
     }
     
     def oneFailsWithoutIgnores = {
-      implicit val ignores = Ignores() // Don't ignore URL in comment above
+      implicit val ignores = Ignores() 
       runner(spec(Scala.snippets, "src/main/scala", "src/test/scala"))
-      runner.fails must_== 1
+      runner.fails must_== 2
       runner.skipped must_== 0
-      runner.successes must_== Scala.snippets.smells.size * numFiles - 1
+      runner.successes must_== Scala.snippets.smells.size * numFiles - runner.fails
     }
     
     def filesNamed = {
