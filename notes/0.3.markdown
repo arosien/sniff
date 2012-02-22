@@ -1,0 +1,2 @@
+* arosien/sniff#5 - Specify paths as Regex's.
+* arosien/sniff#4 - Better performance with specs2 1.8.2.
