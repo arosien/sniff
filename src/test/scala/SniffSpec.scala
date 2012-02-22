@@ -11,7 +11,7 @@ import java.io.File
 
 object SniffIgnores {
   implicit val ignores = Ignores(
-      Ignore('NoURL, "src/test/scala/SniffSpec.scala"),
+      Ignore('NoURL,                      """SniffSpec.scala$""".r),
       Ignore('NoJavaDeprecatedAnnotation, "src/main/scala/smells.scala"))
 }
 

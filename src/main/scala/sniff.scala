@@ -36,11 +36,14 @@ package object sniff {
   }
   implicit def langToSnippets(lang: Language): ToSnippets = ToSnippets(lang)
   
-  implicit def filenamesToFilter(named: FilesNamed): FileFilter = { file: File => !file.isDirectory && named.filenames.exists(_ == file.getName()) }
   
   private[sniff] def getFileTree(f: File): Stream[File] = f #:: (if (f.isDirectory) f.listFiles().toStream.flatMap(getFileTree) else Stream.empty)
 
-  implicit def fileSmellMatcherToPairMatcher(matcher: Matcher[FileSmell]): Matcher[(File, Smell)] = matcher ^^ { fs: (File, Smell) => FileSmell(fs._1, fs._2) }  
+  implicit def fileSmellMatcherToPairMatcher(matcher: Matcher[FileSmell]): Matcher[(File, Smell)] = matcher ^^ { fs: (File, Smell) => FileSmell(fs._1, fs._2) }
+  
+  implicit def filenamesToFilter(named: FilesNamed): FileFilter = file => !file.isDirectory && named.filenames.exists(_ == file.getName())
+  implicit def pathToFileFilter(path: Path): FileFilter = _.getAbsolutePath().endsWith(path)
+  implicit def regexToFileFilter(regex: Regex): FileFilter = file => regex.findFirstIn(file.getAbsolutePath()).isDefined
 }
 
 package sniff {
@@ -50,8 +53,9 @@ package sniff {
   case class Ignores(ignores: Ignore*) {
     def ignore(smell: Smell, file: File): Boolean = ignores.find(_.ignore(smell, file)).isDefined
   }
-  case class Ignore(id: SmellId, paths: Path*) {
-    def ignore(smell: Smell, file: File) = id == smell.id && paths.exists(file.getAbsolutePath().endsWith(_))
+  /** Note that the package object defines implicit conversions from `Path` and `Regex` to `FileFilter`. */
+  case class Ignore(id: SmellId, filters: FileFilter*) {
+    def ignore(smell: Smell, file: File) = id == smell.id && filters.exists(_(file))
   }
 
   abstract class Language(val fileExtension: String, val tag: Tag)
