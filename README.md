@@ -23,6 +23,8 @@ maven:
 </dependency>
 ```
 
+[![Build Status](https://secure.travis-ci.org/arosien/sniff.png)](http://travis-ci.org/arosien/sniff)
+
 # Usage
 
 ```scala
