@@ -75,7 +75,7 @@ class SniffSpec extends Specification with MustThrownMatchers {
     }
     
     def oneFailsWithoutIgnores = {
-      implicit val ignores = Ignores() 
+      implicit val ignores = Ignores()
       runner(spec(Scala.snippets, "src/main/scala", "src/test/scala"))
       runner.fails must_== 2
       runner.skipped must_== 0

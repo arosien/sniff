@@ -31,7 +31,7 @@ package object sniff {
   implicit def snippetsToSniffer(snippets: CodeSnippets) = new Sniffer(snippets)
   
   implicit def langToFilter(lang: Language): FileFilter = { file: File => !file.isDirectory && file.getName().endsWith(".%s".format(lang.fileExtension)) }
-  case class ToSnippets(lang: Language) { 
+  case class ToSnippets(lang: Language) {
     def snippets = CodeSnippets(lang, Smells.withTags(_.contains(lang.tag)): _*)
   }
   implicit def langToSnippets(lang: Language): ToSnippets = ToSnippets(lang)
@@ -102,7 +102,7 @@ package sniff {
       val description = "%s (%s)".format(smell.id.name, smell.tags.mkString(", "))
       
       if (ignore.ignore(smell, file)) description ! skipped
-      else description ! ((file, smell) must smellNice) 
+      else description ! ((file, smell) must smellNice)
     }
     
   }
