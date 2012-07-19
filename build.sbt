@@ -1,6 +1,4 @@
-import sbtrelease.Release._
-
-seq(releaseSettings: _*)
+releaseSettings
 
 organization := "net.rosien"
 
