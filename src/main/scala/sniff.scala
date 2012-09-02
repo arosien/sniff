@@ -44,6 +44,22 @@ package object sniff {
   implicit def filenamesToFilter(named: FilesNamed): FileFilter = file => !file.isDirectory && named.filenames.exists(_ == file.getName())
   implicit def pathToFileFilter(path: Path): FileFilter = _.getAbsolutePath().endsWith(path)
   implicit def regexToFileFilter(regex: Regex): FileFilter = file => regex.findFirstIn(file.getAbsolutePath()).isDefined
+  
+  implicit object ScalaPaths extends Paths[Scala.type] {
+    def paths = Seq("src/main/scala", "src/test/scala")
+  }
+  
+  implicit object JavaPaths extends Paths[Java.type] {
+    def paths = Seq("src/main/java", "src/test/java")
+  }
+  
+  implicit def langToSpec[L <: Language : Paths](lang: L): ToSpec[L] = ToSpec(lang)
+  
+  case class ToSpec[L <: Language : Paths](lang: L) {
+    def spec = new Specification {
+      def is = "no smell!" ^ lang.snippets.sniff(implicitly[Paths[L]].paths: _*)
+    }
+  }
 }
 
 package sniff {
@@ -62,6 +78,10 @@ package sniff {
   case object Scala extends Language("scala", 'Scala)
   case object Java extends Language("java", 'Java)
   case object Php extends Language("php", 'Php)
+  
+  trait Paths[L <: Language] {
+    def paths: Seq[Path]
+  }
   
   case class FilesNamed(filenames: String*)
   
