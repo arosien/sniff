@@ -17,7 +17,7 @@ object SniffIgnores {
 
 class MetaSpec extends Specification {
   import SniffIgnores._
-  def is = "Sniff should not smell" ^ Scala.snippets.sniff("src/main/scala", "src/test/scala")
+  def is = "Sniff should not smell" ^ Scala.snippets.sniff("core/src/main/scala", "core/src/test/scala")
 }
 
 class SniffSpec extends Specification with MustThrownMatchers {
@@ -61,14 +61,14 @@ class SniffSpec extends Specification with MustThrownMatchers {
     }
   
     val runner = new CollectingSpecRunner
-    val numFiles = getFileTree(new File("src/main/scala")).filter(Scala).size + getFileTree(new File("src/test/scala")).filter(Scala).size
+    val numFiles = getFileTree(new File("core/src/main/scala")).filter(Scala).size + getFileTree(new File("core/src/test/scala")).filter(Scala).size
     
     def langConvertsToSnippets = Scala.snippets.smells must not be empty
     
     def allPass = {
       // import java.net.URL <-- should be ignored from the clause below:
       import SniffIgnores._
-      runner(spec(Scala.snippets, "src/main/scala", "src/test/scala"))
+      runner(spec(Scala.snippets, "core/src/main/scala", "core/src/test/scala"))
       runner.fails must_== 0
       runner.skipped must_== 2
       runner.successes must_== Scala.snippets.smells.size * numFiles - runner.skipped
@@ -76,7 +76,7 @@ class SniffSpec extends Specification with MustThrownMatchers {
     
     def oneFailsWithoutIgnores = {
       implicit val ignores = Ignores() 
-      runner(spec(Scala.snippets, "src/main/scala", "src/test/scala"))
+      runner(spec(Scala.snippets, "core/src/main/scala", "core/src/test/scala"))
       runner.fails must_== 2
       runner.skipped must_== 0
       runner.successes must_== Scala.snippets.smells.size * numFiles - runner.fails
@@ -84,7 +84,7 @@ class SniffSpec extends Specification with MustThrownMatchers {
     
     def filesNamed = {
       implicit val ignores = Ignores()
-      runner(spec(logback, "src/test/resources"))
+      runner(spec(logback, "core/src/test/resources"))
       runner.successes must_== 0
       runner.fails must_== 1
       runner.skipped must_== 0
