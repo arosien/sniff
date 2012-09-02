@@ -1,7 +1,5 @@
 releaseSettings
 
-seq(conscriptSettings :_*)
-
 organization := "net.rosien"
 
 name := "sniff"

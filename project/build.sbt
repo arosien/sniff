@@ -1,8 +1,11 @@
-addSbtPlugin("com.github.gseitz" % "sbt-release" % "0.6")
+import Defaults.sbtPluginExtra
+
+resolvers += "gseitz@github" at "http://gseitz.github.com/maven/"
+
+addSbtPlugin("com.github.gseitz" % "sbt-release" % "0.5")
 
 addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "2.1.0-RC1")
 
-addSbtPlugin("com.jsuereth" % "xsbt-gpg-plugin" % "0.6")
+resolvers += Resolver.url("sbt-plugin-releases", url("http://scalasbt.artifactoryonline.com/scalasbt/sbt-plugin-releases/"))(Resolver.ivyStylePatterns)
 
-addSbtPlugin("net.databinder" % "conscript-plugin" % "0.3.5")
-
+libraryDependencies += sbtPluginExtra("com.jsuereth" % "xsbt-gpg-plugin" % "0.6.1", "0.11.3", "2.9.1")
