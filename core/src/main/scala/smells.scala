@@ -3,7 +3,6 @@ package net.rosien.sniff
 import scala.math.Ordering
 
 object Smells {
-  private implicit def langToTag(lang: Language): Tag = lang.tag
   private implicit val smellIdOrdering: Ordering[SmellId] = Ordering.by(_.name)
   
   private val * = '* // Use the * tag to apply to all kinds of files.

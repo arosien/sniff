@@ -35,7 +35,7 @@ package object sniff {
     def snippets = CodeSnippets(lang, Smells.withTags(_.contains(lang.tag)): _*)
   }
   implicit def langToSnippets(lang: Language): ToSnippets = ToSnippets(lang)
-  
+  implicit def langToTag(lang: Language): Tag = lang.tag
   
   private[sniff] def getFileTree(f: File): Stream[File] = f #:: (if (f.isDirectory) f.listFiles().toStream.flatMap(getFileTree) else Stream.empty)
 
