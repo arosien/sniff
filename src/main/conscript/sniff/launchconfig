@@ -1,7 +1,7 @@
 [app]
   version: 0.7-SNAPSHOT
   org: net.rosien
-  name: sniff
+  name: sniff-app
   class: net.rosien.sniff.App
 [scala]
   version: 2.9.1
