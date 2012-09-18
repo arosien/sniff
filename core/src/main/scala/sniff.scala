@@ -57,7 +57,8 @@ package object sniff {
   
   case class ToSpec[L <: Language : Paths](lang: L) {
     def spec = new Specification {
-      def is = "no smell!" ^ lang.snippets.sniff(implicitly[Paths[L]].paths: _*)
+      def is = "%s code".format(lang.tag.name).title ^ 
+          "shouldn't smell" ^ lang.snippets.sniff(implicitly[Paths[L]].paths: _*)
     }
   }
 }
