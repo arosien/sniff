@@ -1,0 +1,3 @@
+* arosien/sniff#9 - Fix missing Lang => Tag implicit to make README example work.
+* Refactor project into sniff, sniff-core and sniff-app (conscript app).
+* sniff-app only scans the current directory for Scala smells, next release will have real options.
