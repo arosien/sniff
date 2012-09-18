@@ -14,7 +14,7 @@ addSbtPlugin("net.databinder" % "conscript-plugin" % "0.3.4")
 
 addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.1.2")
 
-resolvers += Seq(
+resolvers ++= Seq(
   "less is" at "http://repo.lessis.me",
   "coda" at "http://repo.codahale.com"
 )
