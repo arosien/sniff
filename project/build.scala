@@ -49,7 +49,7 @@ object Builds extends sbt.Build {
     settings = buildSettings ++ conscript.Harness.conscriptSettings ++ Seq(
       description := "Command line tool to sniff source code",
       name := "sniff"
-    )) dependsOn (core)
+    )) dependsOn(core)
 
   lazy val core = Project("sniff-core", file("core"),
     settings = buildSettings ++ Seq(
