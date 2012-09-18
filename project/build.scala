@@ -4,6 +4,7 @@ object Builds extends sbt.Build {
   import Keys._
   import sbtrelease.ReleasePlugin._
   import sbtbuildinfo.Plugin._
+  import ls.Plugin.{lsSettings,LsKeys}
 
   lazy val buildSettings = Defaults.defaultSettings ++ releaseSettings ++ Seq( 
     organization := "net.rosien",
@@ -43,8 +44,10 @@ object Builds extends sbt.Build {
 
   // Depends on 'core' so that one can depend on 'sniff' or 'sniff-core'.
   lazy val root = Project("sniff", file("."),
-    settings = buildSettings ++ Seq(
-      name := "sniff"
+    settings = buildSettings ++ lsSettings ++ Seq(
+      name := "sniff",
+      description := "Keep your code fresh smelling: generate bad code smells specs2 specifications for any source language",
+      LsKeys.tags in LsKeys.lsync := Seq("test", "specs2", "code smells")
     )) aggregate(app, core) dependsOn(core)
 
   lazy val app = Project("sniff-app", file("app"),
@@ -54,7 +57,7 @@ object Builds extends sbt.Build {
 
   lazy val core = Project("sniff-core", file("core"),
     settings = buildSettings ++ buildInfoSettings ++ Seq(
-      description := "the inner nose",
+      description := "sniff: the inner nose",
       sourceGenerators in Compile <+= buildInfo,
       buildInfoPackage := "net.rosien.sniff",
       libraryDependencies ++= Seq(
