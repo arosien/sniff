@@ -3,6 +3,7 @@ import sbt._
 object Builds extends sbt.Build {
   import Keys._
   import sbtrelease.ReleasePlugin._
+  import sbtbuildinfo.Plugin._
 
   lazy val buildSettings = Defaults.defaultSettings ++ releaseSettings ++ Seq( 
     organization := "net.rosien",
@@ -52,8 +53,10 @@ object Builds extends sbt.Build {
     )) dependsOn(core)
 
   lazy val core = Project("sniff-core", file("core"),
-    settings = buildSettings ++ Seq(
+    settings = buildSettings ++ buildInfoSettings ++ Seq(
       description := "the inner nose",
+      sourceGenerators in Compile <+= buildInfo,
+      buildInfoPackage := "net.rosien.sniff",
       libraryDependencies ++= Seq(
         "org.specs2" %% "specs2" % "1.8.2",
         "org.scalaz" %% "scalaz-core" % "6.0.3"

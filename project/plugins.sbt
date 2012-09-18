@@ -11,3 +11,6 @@ resolvers += Resolver.url("sbt-plugin-releases", url("http://scalasbt.artifactor
 libraryDependencies += sbtPluginExtra("com.jsuereth" % "xsbt-gpg-plugin" % "0.6.1", "0.11.3", "2.9.1")
 
 addSbtPlugin("net.databinder" % "conscript-plugin" % "0.3.4")
+
+addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.1.2")
+
