@@ -40,15 +40,15 @@ object Builds extends sbt.Build {
       </developers>)
   )
 
+  // Depends on 'core' so that one can depend on 'sniff' or 'sniff-core'.
   lazy val root = Project("sniff", file("."),
     settings = buildSettings ++ Seq(
       name := "sniff"
-    )) aggregate(app, core)
+    )) aggregate(app, core) dependsOn(core)
 
   lazy val app = Project("sniff-app", file("app"),
     settings = buildSettings ++ conscript.Harness.conscriptSettings ++ Seq(
-      description := "Command line tool to sniff source code",
-      name := "sniff"
+      description := "Command line tool to sniff source code"
     )) dependsOn(core)
 
   lazy val core = Project("sniff-core", file("core"),
