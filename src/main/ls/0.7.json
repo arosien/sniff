@@ -1,0 +1,17 @@
+{
+ "organization":"net.rosien",
+ "name":"sniff",
+ "version":"0.7",
+ "description":"Keep your code fresh smelling: generate bad code smells specs2 specifications for any source language",
+ "site":"https://github.com/arosien/sniff",
+ "tags":["test","specs2","code smells"],
+ "docs":"",
+ "licenses": [{
+   "name": "Apache 2",
+   "url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+ }],
+ "resolvers": ["https://oss.sonatype.org/content/repositories/releases"],
+ "dependencies": [],
+ "scalas": ["2.9.0-1","2.9.1"],
+ "sbt": false
+}
