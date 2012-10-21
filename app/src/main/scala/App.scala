@@ -1,58 +1,63 @@
 package net.rosien.sniff
 
-import org.specs2.Specification
 import scalaz._
 import Scalaz._
+import org.rogach.scallop._
 
 /** The launched conscript entry point */
 class App extends xsbti.AppMain {
+  case class Exit(val code: Int) extends xsbti.Exit
   def run(config: xsbti.AppConfiguration) = Exit(App.run(config.arguments))
 }
 
 object App {
   import net.rosien.sniff._
   
-  def run(args: Array[String]): Int = {
-    val opts = options(args.toList,
-        arg('version, "version"))
+  class SniffConf(args: Array[String]) extends ScallopConf(args) {
+    version("sniff %s (c) 2012 Adam Rosien".format(BuildInfo.version))
+    banner("Usage: sniff [<options>] <path>...")
+    footer("See https://github.com/arosien/sniff for more info.")
+    
+    implicit val langConverer = singleArgConverter(net.rosien.sniff.Language(_).get)
+    implicit val tagConverter = listArgConverter(Symbol(_))
+    
+    val lang = opt[net.rosien.sniff.Language](
+        "lang", 
+        descr = "Language to sniff: %s".format(Language.values.map(_.tag.name).mkString(", ")),
+        required = true)
         
-    opts.get('version).map { version =>
-      println("sniff %s".format(BuildInfo.version))
-      0
-    }.getOrElse {
-      // TODO: String => Language
-      val result = specs2.run(Scala.spec)
-      (0 /: result)(_ + _.hasIssues.fold(1, 0))
-    }
+    val tags = opt[List[Tag]]("tags", descr = "Tags of smells to sniff")
+        
+    val allTags = for {
+      l <- lang
+      t <- tags
+    } yield l.tag :: t
+        
+    val paths = trailArg[List[String]](
+        "paths", 
+        descr = "extra paths to sniff", 
+        required = false)
+        
+    val allPaths = for {
+      l <- lang
+      p <- paths
+    } yield l.paths ++ p
+    
+    validate (allTags) { t => t.isEmpty ? "No tags specified".left[Unit] | ().right }
+    validate (allPaths) { p => p.isEmpty ? "No paths specified".left[Unit] | ().right }
   }
   
   def main(args: Array[String]) {
     System.exit(run(args))
   }
   
-  private type OptionMatch = PartialFunction[List[String], (List[String], (Symbol, String))]
-  private val Arg = """^--(\S+)$""".r
-  private val Param = """^--(\S+)=(.+)$""".r
+  def run(args: Array[String]): Int = {
+    val conf = new SniffConf(args) // Exits if given --help or --version.
     
-  private def arg(sym: Symbol, name: String, default: String = ""): OptionMatch = {
-    case Arg(n) :: tail if n == name => tail -> (sym -> default)
-    case Param(n, value) :: tail if n == name => tail -> (sym -> value) 
-  }
-  
-  // stolen from StackOverflow, made better
-  private def options(args: List[String], optionMatchers: OptionMatch*): Map[Symbol, String] = {
-    val default: PartialFunction[List[String], Map[Symbol, String]] = { 
-      case Nil => Map()
-      case Param(name, value) :: tail => sys.error("Unknown option '%s'".format(name))
-      case arg :: tail => sys.error("Unknown arg '%s'".format(arg))
-    }
+    val lang = conf.lang()
+    val spec = lang.spec(conf.paths())
     
-    def wrap(optionMatch: OptionMatch): PartialFunction[List[String], Map[Symbol, String]] = optionMatch andThen {
-      case (tail, m) => options(tail, optionMatchers: _*) + m
-    }
-    
-    (optionMatchers.map(wrap _) :+ default).reduce(_ orElse _)(args)
+    val result = specs2.run(spec)
+    (0 /: result)(_ + _.hasIssues.fold(1, 0))
   }
 }
-
-case class Exit(val code: Int) extends xsbti.Exit

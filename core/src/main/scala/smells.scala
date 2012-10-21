@@ -1,6 +1,7 @@
 package net.rosien.sniff
 
 import scala.math.Ordering
+import Language._
 
 object Smells {
   private implicit val smellIdOrdering: Ordering[SmellId] = Ordering.by(_.name)

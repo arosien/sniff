@@ -8,6 +8,7 @@ import org.specs2.reporter.NotifierReporter
 import org.specs2.execute.Details
 import org.specs2.matcher.MustThrownMatchers
 import java.io.File
+import Language._
 
 object SniffIgnores {
   implicit val ignores = Ignores(
@@ -17,6 +18,7 @@ object SniffIgnores {
 
 class MetaSpec extends Specification {
   import SniffIgnores._
+  
   def is = "Sniff should not smell" ^ Scala.snippets.sniff("core/src/main/scala", "core/src/test/scala")
 }
 

@@ -26,40 +26,26 @@ package object sniff {
    *   (file, smell) must smellNice
    * }}}
    */
-  def smellNice: Matcher[FileSmell] = new SmellsNiceMatcher
+  def smellNice: Matcher[(File, Smell)] = new SmellsNiceMatcher
   
   implicit def snippetsToSniffer(snippets: CodeSnippets) = new Sniffer(snippets)
   
   implicit def langToFilter(lang: Language): FileFilter = { file: File => !file.isDirectory && file.getName().endsWith(".%s".format(lang.fileExtension)) }
-  case class ToSnippets(lang: Language) { 
+  class ToSnippets(lang: Language) { 
     def snippets = CodeSnippets(lang, Smells.withTags(_.contains(lang.tag)): _*)
   }
-  implicit def langToSnippets(lang: Language): ToSnippets = ToSnippets(lang)
+  implicit def langToSnippets(lang: Language): ToSnippets = new ToSnippets(lang)
   implicit def langToTag(lang: Language): Tag = lang.tag
   
   private[sniff] def getFileTree(f: File): Stream[File] = f #:: (if (f.isDirectory) f.listFiles().toStream.flatMap(getFileTree) else Stream.empty)
 
-  implicit def fileSmellMatcherToPairMatcher(matcher: Matcher[FileSmell]): Matcher[(File, Smell)] = matcher ^^ { fs: (File, Smell) => FileSmell(fs._1, fs._2) }
-  
   implicit def filenamesToFilter(named: FilesNamed): FileFilter = file => !file.isDirectory && named.filenames.exists(_ == file.getName())
   implicit def pathToFileFilter(path: Path): FileFilter = _.getAbsolutePath().endsWith(path)
   implicit def regexToFileFilter(regex: Regex): FileFilter = file => regex.findFirstIn(file.getAbsolutePath()).isDefined
   
-  implicit object ScalaPaths extends Paths[Scala.type] {
-    def paths = Seq("src/main/scala", "src/test/scala")
-  }
-  
-  implicit object JavaPaths extends Paths[Java.type] {
-    def paths = Seq("src/main/java", "src/test/java")
-  }
-  
-  implicit def langToSpec[L <: Language : Paths](lang: L): ToSpec[L] = ToSpec(lang)
-  
-  case class ToSpec[L <: Language : Paths](lang: L) {
-    def spec = new Specification {
-      def is = "%s code".format(lang.tag.name).title ^ 
-          "shouldn't smell" ^ lang.snippets.sniff(implicitly[Paths[L]].paths: _*)
-    }
+  implicit def langToSpec(lang: Language): ToSpec = new ToSpec(lang)
+  class ToSpec(lang: Language) {
+    def spec(extraPaths: Seq[String] = Nil) = new SniffSpecification("%s code".format(lang.tag.name), lang.snippets, lang.paths ++ extraPaths)
   }
 }
 
@@ -74,31 +60,37 @@ package sniff {
   case class Ignore(id: SmellId, filters: FileFilter*) {
     def ignore(smell: Smell, file: File) = id == smell.id && filters.exists(_(file))
   }
-
-  abstract class Language(val fileExtension: String, val tag: Tag)
-  case object Scala extends Language("scala", 'Scala)
-  case object Java extends Language("java", 'Java)
-  case object Php extends Language("php", 'Php)
   
-  trait Paths[L <: Language] {
-    def paths: Seq[Path]
+  class SniffSpecification(title: String, snippets: CodeSnippets, paths: Seq[String]) extends Specification {
+    def is = title.title ^ "shouldn't smell" ^ snippets.sniff(paths: _*)
+  }
+
+  case class Language(fileExtension: String, tag: Tag, paths: String*)
+  object Language {
+    val Scala = Language("scala", 'Scala, "src/main/scala", "src/test/scala")
+    val Java = Language("java", 'Java, "src/main/java", "src/test/java")
+    val Php = Language("php", 'Php)
+    
+    val values = Scala :: Java :: Php :: Nil
+    
+    def apply(lang: String): Option[Language] = values.find(_.tag.name.toLowerCase() == lang.toLowerCase())
   }
   
   case class FilesNamed(filenames: String*)
   
   case class FileSmell(file: File, smell: Smell)
     
-  private[sniff] class SmellsNiceMatcher extends Matcher[FileSmell] {
-    def apply[FS <: FileSmell](s: Expectable[FS]) = {
-      val found = findSmell(s.value)
+  private[sniff] class SmellsNiceMatcher extends Matcher[(File, Smell)] {
+    def apply[FS <: (File, Smell)](s: Expectable[FS]) = {
+      val found = findSmell(s.value._1, s.value._2)
       result(!found.isDefined,
           s.description + " is ok",
-          failureMsg(s.value.smell, s.value.file, found.map(_._2 + 1).getOrElse(-1)),
+          failureMsg(s.value._2, s.value._1, found.map(_._2 + 1).getOrElse(-1)),
           s)
     }
 
     // TODO: find all, not find first
-    private def findSmell(fs: FileSmell) = lines(fs.file).find(l => fs.smell.regex.findFirstIn(l._1).isDefined)
+    private def findSmell(file: File, smell: Smell) = lines(file).find(l => smell.regex.findFirstIn(l._1).isDefined)
     private def lines(file: File) = Source.fromFile(file).getLines.zipWithIndex
     private def failureMsg(smell: Smell, file: File, line: Int) = "failed snippet %s at %s:%s (%s)".format(smell.id.name, file.getAbsolutePath(), line, smell.rationale)
   }
@@ -108,10 +100,11 @@ package sniff {
     import MustMatchers._
 
     def sniff(paths: Path*)(implicit ignore: Ignores = Ignores()): Fragments = {
-      sniff(paths
+      val files = paths
           .map(path => getFileTree(new File(path)))
           .reduce(_ ++ _)
-          .filter(!_.isDirectory())).foldLeft(Fragments())(_ ^ _ ^ p)
+          .filter(!_.isDirectory())
+      sniff(files).foldLeft(Fragments())(_ ^ _ ^ p)
     }
 
     def sniff(files: Stream[File])(implicit ignore: Ignores): Stream[Fragments] = for {
