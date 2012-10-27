@@ -55,9 +55,6 @@ class SniffSpec extends Specification with MustThrownMatchers {
   }
 
   case class snippets() {
-    val logback = CodeSnippets(FilesNamed("logback.xml"),
-        Smell('NoMethodNameLogging, """%M""".r, "%M is an expensive logging option"))
-
     def spec(snippets: CodeSnippets, dirs: Path*)(implicit ignores: Ignores) = new Specification {
       val is = "Code shouldn't smell" ^ snippets.sniff(dirs: _*)
     }
@@ -77,16 +74,16 @@ class SniffSpec extends Specification with MustThrownMatchers {
     }
     
     def oneFailsWithoutIgnores = {
-      implicit val ignores = Ignores() 
-      runner(spec(Scala.snippets, "core/src/main/scala", "core/src/test/scala"))
+      runner(spec(Scala.snippets, "core/src/main/scala", "core/src/test/scala")(Ignores()))
       runner.fails must_== 2
       runner.skipped must_== 0
       runner.successes must_== Scala.snippets.smells.size * numFiles - runner.fails
     }
     
     def filesNamed = {
-      implicit val ignores = Ignores()
-      runner(spec(logback, "core/src/test/resources"))
+      val logback = CodeSnippets(FilesNamed("logback.xml"),
+        Smell('NoMethodNameLogging, """%M""".r, "%M is an expensive logging option"))
+      runner(spec(logback, "core/src/test/resources")(Ignores()))
       runner.successes must_== 0
       runner.fails must_== 1
       runner.skipped must_== 0
