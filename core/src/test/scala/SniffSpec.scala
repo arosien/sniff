@@ -27,8 +27,8 @@ class SniffSpec extends Specification with MustThrownMatchers {
       "Scala Language converts to snippets"      ! snippets().langConvertsToSnippets ^
       "Scala snippets should pass"               ! snippets().allPass ^
       "Snippets without ignores fails for NoURL" ! snippets().oneFailsWithoutIgnores ^
-      "FilesNamed scans specific file"           ! snippets().filesNamed ^
-                                                   end
+      "FilesNamed scans specific file"           ! snippets().filesNamed ^ 
+      end
   
   // TODO: I'm sure there's a better way to do this.
   class CollectingSpecRunner extends ClassRunner with Notifier {
