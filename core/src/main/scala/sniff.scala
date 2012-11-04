@@ -18,6 +18,8 @@ package object sniff {
   type Path = String
   type FileFilter = File => Boolean
   type Tag = Symbol
+  
+  implicit val smells: Smells = DefaultSmells
 
   /**
    * {{{
@@ -27,29 +29,35 @@ package object sniff {
    * }}}
    */
   def smellNice: Matcher[(File, Smell)] = new SmellsNiceMatcher
+  private[sniff] def getFileTree(f: File): Stream[File] = f #:: (if (f.isDirectory) f.listFiles().toStream.flatMap(getFileTree) else Stream.empty)
   
   implicit def snippetsToSniffer(snippets: CodeSnippets) = new Sniffer(snippets)
   
-  implicit def langToFilter(lang: Language): FileFilter = { file: File => !file.isDirectory && file.getName().endsWith(".%s".format(lang.fileExtension)) }
-  class ToSnippets(lang: Language) { 
-    def snippets = CodeSnippets(lang, Smells.withTags(_.contains(lang.tag)): _*)
+  class ToSnippets(lang: Language)(implicit smells: Smells) { 
+    def snippets = CodeSnippets(lang.fileFilter, lang.smells: _*)
   }
-  implicit def langToSnippets(lang: Language): ToSnippets = new ToSnippets(lang)
+  implicit def langToSnippets(lang: Language)(implicit smells: Smells): ToSnippets = new ToSnippets(lang)
   implicit def langToTag(lang: Language): Tag = lang.tag
   
-  private[sniff] def getFileTree(f: File): Stream[File] = f #:: (if (f.isDirectory) f.listFiles().toStream.flatMap(getFileTree) else Stream.empty)
-
+  implicit def langToFilter(lang: Language): FileFilter = lang.fileFilter
   implicit def filenamesToFilter(named: FilesNamed): FileFilter = file => !file.isDirectory && named.filenames.exists(_ == file.getName())
   implicit def pathToFileFilter(path: Path): FileFilter = _.getAbsolutePath().endsWith(path)
   implicit def regexToFileFilter(regex: Regex): FileFilter = file => regex.findFirstIn(file.getAbsolutePath()).isDefined
-  
-  implicit def langToSpec(lang: Language): ToSpec = new ToSpec(lang)
-  class ToSpec(lang: Language) {
-    def spec(extraPaths: Seq[String] = Nil) = new SniffSpecification("%s code".format(lang.tag.name), lang.snippets, lang.paths ++ extraPaths)
-  }
 }
 
 package sniff {
+  
+  /*
+   * Tag => Option[Language]
+   * Tag => Seq[Smell]
+   * 
+   * Language => FileFilter
+   * Language => Tag
+   * 
+   * FileFilter => Seq[Smell] => Snippets
+   * 
+   * Sniffer => Snippets => Seq[Path] => Specification
+   */
 
   case class CodeSnippets(filter: FileFilter, smells: Smell*)
   case class Smell(id: SmellId, regex: Regex, rationale: String, tags: Tag*)
@@ -61,18 +69,33 @@ package sniff {
     def ignore(smell: Smell, file: File) = id == smell.id && filters.exists(_(file))
   }
   
-  class SniffSpecification(title: String, snippets: CodeSnippets, paths: Seq[String]) extends Specification {
-    def is = title.title ^ "shouldn't smell" ^ snippets.sniff(paths: _*)
+  class SniffSpecification(title: String, snippets: Seq[CodeSnippets], paths: Seq[String]) extends Specification {
+    def is = title.title ^ (Fragments() /: snippets)(_ ^ _.sniff(paths: _*))
+  }
+  
+  object SniffSpecification {
+    def apply(title: String, tags: Seq[Tag], paths: Seq[Path])(implicit smells: Smells): SniffSpecification = {
+      val snippets = for {
+        tag <- tags if Language(tag).isDefined
+        l <- Language(tag)
+      } yield CodeSnippets(l.fileFilter, l.smells: _*)
+      new SniffSpecification(title, snippets, paths)
+    }
   }
 
-  case class Language(fileExtension: String, tag: Tag, paths: String*)
+  case class Language(fileExtension: String, tag: Tag) {
+    def fileFilter: FileFilter = { file: File => !file.isDirectory && file.getName().endsWith(".%s".format(fileExtension)) }
+    def smells(implicit smells: Smells) = smells.withTags(_.contains(tag))
+  }
+  
   object Language {
-    val Scala = Language("scala", 'Scala, "src/main/scala", "src/test/scala")
-    val Java = Language("java", 'Java, "src/main/java", "src/test/java")
+    val Scala = Language("scala", 'Scala)
+    val Java = Language("java", 'Java)
     val Php = Language("php", 'Php)
     
     val values = Scala :: Java :: Php :: Nil
     
+    def apply(lang: Tag): Option[Language] = apply(lang.name)
     def apply(lang: String): Option[Language] = values.find(_.tag.name.toLowerCase() == lang.toLowerCase())
   }
   

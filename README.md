@@ -100,7 +100,7 @@ val mySmells =
 }
 
 class SniffSpec extends Specification { 
-  def is = "Die smells die" ^ CodeSnippets(Scala, smells: _*).sniff("src/main/scala", "src/test/scala")
+  def is = "Die smells die" ^ CodeSnippets(Scala, mySmells: _*).sniff("src/main/scala", "src/test/scala")
 }
 ```
 

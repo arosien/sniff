@@ -53,7 +53,7 @@ object Builds extends sbt.Build {
   lazy val app = Project("sniff-app", file("app"),
     settings = buildSettings ++ conscript.Harness.conscriptSettings ++ Seq(
       description := "Command line tool to sniff source code",
-      libraryDependencies += "org.rogach" %% "scallop" % "0.6.0"
+      libraryDependencies += "org.rogach" %% "scallop" % "0.6.2"
     )) dependsOn(core)
 
   lazy val core = Project("sniff-core", file("core"),

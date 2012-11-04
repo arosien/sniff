@@ -12,39 +12,26 @@ class App extends xsbti.AppMain {
 
 object App {
   import net.rosien.sniff._
+  import net.rosien.sniff.ScallopScalaz._
   
   class SniffConf(args: Array[String]) extends ScallopConf(args) {
     version("sniff %s (c) 2012 Adam Rosien".format(BuildInfo.version))
     banner("Usage: sniff [<options>] <path>...")
     footer("See https://github.com/arosien/sniff for more info.")
     
-    implicit val langConverer = singleArgConverter(net.rosien.sniff.Language(_).get)
+    implicit val langConverer = singleArgConverter(Language(_).get)
     implicit val tagConverter = listArgConverter(Symbol(_))
     
-    val lang = opt[net.rosien.sniff.Language](
+    val lang = opt[Language](
         "lang", 
         descr = "Language to sniff: %s".format(Language.values.map(_.tag.name).mkString(", ")),
         required = true)
         
-    val tags = opt[List[Tag]]("tags", descr = "Tags of smells to sniff")
+    val extraTags = opt[List[Tag]]("tags", descr = "Extra tags of smells to sniff").orElse(Nil.some)
+    val langTags = lang.map(_.tag :: Nil)
+    val tags = (langTags |@| extraTags) { (l, ts) => l |+| ts }
         
-    val allTags = for {
-      l <- lang
-      t <- tags
-    } yield l.tag :: t
-        
-    val paths = trailArg[List[String]](
-        "paths", 
-        descr = "extra paths to sniff", 
-        required = false)
-        
-    val allPaths = for {
-      l <- lang
-      p <- paths
-    } yield l.paths ++ p
-    
-    validate (allTags) { t => t.isEmpty ? "No tags specified".left[Unit] | ().right }
-    validate (allPaths) { p => p.isEmpty ? "No paths specified".left[Unit] | ().right }
+    val paths = trailArg[List[String]]("paths", descr = "paths to sniff", required = true)
   }
   
   def main(args: Array[String]) {
@@ -54,10 +41,21 @@ object App {
   def run(args: Array[String]): Int = {
     val conf = new SniffConf(args) // Exits if given --help or --version.
     
-    val lang = conf.lang()
-    val spec = lang.spec(conf.paths())
+    val spec = SniffSpecification(
+        "code shouldn't smell (tags: %s; paths: %s)".format(conf.tags().mkString(", "), conf.paths().mkString(", ")), 
+        conf.tags(), 
+        conf.paths())
     
-    val result = specs2.run(spec)
-    (0 /: result)(_ + _.hasIssues.fold(1, 0))
+    (0 /: specs2.run(spec))(_ + _.hasIssues.fold(1, 0))
+  }
+}
+
+object ScallopScalaz {
+  implicit val scallopFunctor: Functor[ScallopOption] = new Functor[ScallopOption] {
+    def fmap[A, B](r: ScallopOption[A], f: A => B) = r map f
+  }
+  
+  implicit val scallopBind: Bind[ScallopOption] = new Bind[ScallopOption] {
+    def bind[A, B](a: ScallopOption[A], f: A => ScallopOption[B]) = a flatMap f
   }
 }

@@ -10,16 +10,46 @@ import org.specs2.matcher.MustThrownMatchers
 import java.io.File
 import Language._
 
-object SniffIgnores {
+object SpecIgnores {
   implicit val ignores = Ignores(
       Ignore('NoURL,                      """SniffSpec.scala$""".r),
       Ignore('NoJavaDeprecatedAnnotation, "src/main/scala/smells.scala"))
 }
 
 class MetaSpec extends Specification {
-  import SniffIgnores._
+  import SpecIgnores._
   
   def is = "Sniff should not smell" ^ Scala.snippets.sniff("core/src/main/scala", "core/src/test/scala")
+}
+
+class ReadmeSpec extends Specification {
+  def is = "README examples compile" ^
+      "usage"     ! usage ^
+      "ignores"   ! ignores ^
+      "my smells" ! mySmells ^
+      end
+      
+  def usage = {
+    val spec = "Scala code shouldn't smell" ^ Scala.snippets.sniff("src/main/scala", "src/test/scala")
+    success
+  }
+  
+  def ignores = {
+    implicit val ignore = Ignores(
+      Ignore('NoURL, "src/test/scala/SniffSpec.scala"))
+    success
+  }
+  
+  def mySmells = {
+    val mySmells = 
+        Smell('NoMutableCollections, """scala\.collection\.mutable""".r, rationale = "Immutable is better than mutable. - El Jefe", Scala, 'movieReferences) ::
+        // more smells
+        Nil
+    class SniffSpec extends Specification { 
+      def is = "Die smells die" ^ CodeSnippets(Scala, mySmells: _*).sniff("src/main/scala", "src/test/scala")
+    }
+    success
+  }
 }
 
 class SniffSpec extends Specification with MustThrownMatchers {
@@ -60,13 +90,14 @@ class SniffSpec extends Specification with MustThrownMatchers {
     }
   
     val runner = new CollectingSpecRunner
-    val numFiles = getFileTree(new File("core/src/main/scala")).filter(Scala).size + getFileTree(new File("core/src/test/scala")).filter(Scala).size
+    val numFiles = getFileTree(new File("core/src/main/scala")).filter(Scala.fileFilter).size + 
+        getFileTree(new File("core/src/test/scala")).filter(Scala.fileFilter).size
     
     def langConvertsToSnippets = Scala.snippets.smells must not be empty
     
     def allPass = {
       // import java.net.URL <-- should be ignored from the clause below:
-      import SniffIgnores._
+      import SpecIgnores._
       runner(spec(Scala.snippets, "core/src/main/scala", "core/src/test/scala"))
       runner.fails must_== 0
       runner.skipped must_== 2
