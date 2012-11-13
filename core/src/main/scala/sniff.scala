@@ -130,18 +130,19 @@ package sniff {
       sniff(files).foldLeft(Fragments())(_ ^ _ ^ p)
     }
 
-    def sniff(files: Stream[File])(implicit ignore: Ignores): Stream[Fragments] = for {
-      file <- files if snippets.filter(file)
-    } yield "%s should smell ok".format(file.getAbsolutePath()) ^ sniff(file)
+    def sniff(files: Stream[File])(implicit ignore: Ignores): Stream[Fragments] = 
+      for {
+    	file <- files if snippets.filter(file)
+      } yield "%s should smell ok".format(file.getAbsolutePath()) ^ sniff(file)
 
-    def sniff(file: File)(implicit ignore: Ignores): Seq[Example] = for {
-      smell <- snippets.smells
-    } yield {
-      val description = "%s (%s)".format(smell.id.name, smell.tags.mkString(", "))
+    def sniff(file: File)(implicit ignore: Ignores): Seq[Example] = 
+      for {
+    	smell <- snippets.smells
+      } yield {
+    	val description = "%s (%s)".format(smell.id.name, smell.tags.mkString(", "))
       
-      if (ignore.ignore(smell, file)) description ! skipped
-      else description ! ((file, smell) must smellNice) 
-    }
-    
+        if (ignore.ignore(smell, file)) description ! skipped
+    	else description ! ((file, smell) must smellNice) 
+      }
   }
 }
