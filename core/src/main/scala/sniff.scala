@@ -113,8 +113,11 @@ package sniff {
     }
 
     // TODO: find all, not find first
-    private def findSmell(file: File, smell: Smell) = lines(file).find(l => smell.regex.findFirstIn(l._1).isDefined)
-    private def lines(file: File) = Source.fromFile(file).getLines.zipWithIndex
+    private def findSmell(file: File, smell: Smell) = {
+      val source = Source.fromFile(file)
+      try source.getLines.zipWithIndex.find(l => smell.regex.findFirstIn(l._1).isDefined)
+      finally source.close
+    }
     private def failureMsg(smell: Smell, file: File, line: Int) = "failed snippet %s at %s:%s (%s)".format(smell.id.name, file.getAbsolutePath(), line, smell.rationale)
   }
   
