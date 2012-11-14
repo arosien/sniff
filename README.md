@@ -33,7 +33,7 @@ import org.specs2.Specification
 class SniffSpec extends Specification { 
   import net.rosien.sniff._
     
-  def is = "Scala code shouldn't smell" ^ Scala.snippets.sniff("src/main/scala", "src/test/scala")
+  def is = "Scala code shouldn't smell" ^ Language.Scala.snippets.sniff("src/main/scala", "src/test/scala")
 }
 ```
 
@@ -100,7 +100,7 @@ val mySmells =
 }
 
 class SniffSpec extends Specification { 
-  def is = "Die smells die" ^ CodeSnippets(Scala, mySmells: _*).sniff("src/main/scala", "src/test/scala")
+  def is = "Die smells die" ^ CodeSnippets(Language.Scala, mySmells: _*).sniff("src/main/scala", "src/test/scala")
 }
 ```
 
