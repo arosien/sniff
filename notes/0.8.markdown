@@ -1,0 +1,3 @@
+* Properly close files as soon as possible to avoid file descriptor leaks.
+* Update to sbt 0.12.1.
+* sniff-app has sweet commandline runs via org.rogach.scallop. No sbt plugin yet though, meh. 
