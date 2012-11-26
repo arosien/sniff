@@ -13,7 +13,8 @@ import Language._
 object SpecIgnores {
   implicit val ignores = Ignores(
       Ignore('NoURL,                      """SniffSpec.scala$""".r),
-      Ignore('NoJavaDeprecatedAnnotation, "src/main/scala/smells.scala"))
+      Ignore('NoJavaDeprecatedAnnotation, "src/main/scala/smells.scala"),
+      Ignore('NoReturn,                   "src/main/scala/smells.scala"))
 }
 
 class MetaSpec extends Specification {
@@ -88,29 +89,29 @@ class SniffSpec extends Specification with MustThrownMatchers {
     def spec(snippets: CodeSnippets, dirs: Path*)(implicit ignores: Ignores) = new Specification {
       val is = "Code shouldn't smell" ^ snippets.sniff(dirs: _*)
     }
-  
+
     val runner = new CollectingSpecRunner
     val numFiles = getFileTree(new File("core/src/main/scala")).filter(Scala.fileFilter).size + 
         getFileTree(new File("core/src/test/scala")).filter(Scala.fileFilter).size
-    
+
     def langConvertsToSnippets = Scala.snippets.smells must not be empty
-    
+
     def allPass = {
       // import java.net.URL <-- should be ignored from the clause below:
       import SpecIgnores._
       runner(spec(Scala.snippets, "core/src/main/scala", "core/src/test/scala"))
       runner.fails must_== 0
-      runner.skipped must_== 2
+      runner.skipped must_== ignores.ignores.size
       runner.successes must_== Scala.snippets.smells.size * numFiles - runner.skipped
     }
-    
+
     def oneFailsWithoutIgnores = {
       runner(spec(Scala.snippets, "core/src/main/scala", "core/src/test/scala")(Ignores()))
-      runner.fails must_== 2
+      runner.fails must_== SpecIgnores.ignores.ignores.size
       runner.skipped must_== 0
       runner.successes must_== Scala.snippets.smells.size * numFiles - runner.fails
     }
-    
+
     def filesNamed = {
       val logback = CodeSnippets(FilesNamed("logback.xml"),
         Smell('NoMethodNameLogging, """%M""".r, "%M is an expensive logging option"))

@@ -24,8 +24,9 @@ object DefaultSmells extends Smells {
       /*
        * Scala
        */
-      Smell('NoSystemProperties,         """System\.\w+Property\(""".r, "Use Scala-idomatic sys.props object", Scala) ::
-      Smell('NoJavaDeprecatedAnnotation, """@Deprecated""".r,           "Use Scala's @deprecated, not Java's", Scala) ::
+      Smell('NoSystemProperties,         """System\.\w+Property\(""".r, "Use Scala-idomatic sys.props object"     , Scala) ::
+      Smell('NoJavaDeprecatedAnnotation, """@Deprecated""".r,           "Use Scala's @deprecated, not Java's"     , Scala) ::
+      Smell('NoReturn,                   """return""".r,                "Return values only at the end of methods", Scala) ::
       /*
        * Scala testing
        */
