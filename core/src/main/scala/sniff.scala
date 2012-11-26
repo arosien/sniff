@@ -8,8 +8,9 @@ import java.io.File
 import scala.io.Source
 import org.specs2.Specification
 import org.specs2.specification.Example
+import org.specs2.specification.FormattingFragments
 import org.specs2.specification.Fragments
-import org.specs2.SpecificationFeatures
+import org.specs2.execute.StandardResults
 import org.specs2.execute.Skipped
 import org.specs2.execute.Result
 
@@ -121,9 +122,8 @@ package sniff {
     private def failureMsg(smell: Smell, file: File, line: Int) = "failed snippet %s at %s:%s (%s)".format(smell.id.name, file.getAbsolutePath(), line, smell.rationale)
   }
   
-  class Sniffer(snippets: CodeSnippets) extends SpecificationFeatures {
+  class Sniffer(snippets: CodeSnippets) extends FormattingFragments with StandardResults with MustMatchers {
     import org.specs2.specification.FragmentsBuilder._
-    import MustMatchers._
 
     def sniff(paths: Path*)(implicit ignore: Ignores = Ignores()): Fragments = {
       val files = paths

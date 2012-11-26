@@ -62,8 +62,8 @@ object Builds extends sbt.Build {
       sourceGenerators in Compile <+= buildInfo,
       buildInfoPackage := "net.rosien.sniff",
       libraryDependencies ++= Seq(
-        "org.specs2" %% "specs2" % "1.8.2",
-        "org.scalaz" %% "scalaz-core" % "6.0.3"
+        "org.specs2" %% "specs2" % "1.12.3",
+        "org.scalaz" %% "scalaz-core" % "6.0.4"
       )
     )) 
 }
