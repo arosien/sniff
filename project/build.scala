@@ -9,7 +9,7 @@ object Builds extends sbt.Build {
   lazy val buildSettings = Defaults.defaultSettings ++ releaseSettings ++ Seq( 
     organization := "net.rosien",
     scalaVersion := "2.9.1",
-    crossScalaVersions := Seq("2.9.0-1", "2.9.1"),
+    crossScalaVersions := Seq("2.9.1", "2.9.2", "2.10.0"),
     scalacOptions ++= Seq("-deprecation", "-unchecked"),
     publishArtifact in Test := false,
     publishMavenStyle := true,
@@ -53,7 +53,7 @@ object Builds extends sbt.Build {
   lazy val app = Project("sniff-app", file("app"),
     settings = buildSettings ++ conscript.Harness.conscriptSettings ++ Seq(
       description := "Command line tool to sniff source code",
-      libraryDependencies += "org.rogach" %% "scallop" % "0.6.2"
+      libraryDependencies += "org.rogach" %% "scallop" % "0.8.0"
     )) dependsOn(core)
 
   lazy val core = Project("sniff-core", file("core"),
@@ -62,7 +62,7 @@ object Builds extends sbt.Build {
       sourceGenerators in Compile <+= buildInfo,
       buildInfoPackage := "net.rosien.sniff",
       libraryDependencies ++= Seq(
-        "org.specs2" % "specs2_2.9.1" % "1.12.3",
+        "org.specs2" %% "specs2" % "1.12.3",
         "org.scalaz" %% "scalaz-core" % "6.0.4"
       )
     )) 

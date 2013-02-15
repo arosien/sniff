@@ -2,13 +2,13 @@ Keeps your code fresh smelling: generate bad code smells specs2 specifications f
 
 # Installation
 
-`sniff` is available via the Maven Central repository and current supports Scala 2.9.0-1 and 2.9.1.
+`sniff` is available via the Maven Central repository and current supports Scala 2.9.1, 2.9.2 and 2.10.0.
 
 sbt:
 
 ```scala
 libraryDependencies ++= Seq(
-  "net.rosien" %% "sniff" % "0.8" % "test"
+  "net.rosien" %% "sniff" % "0.9" % "test"
 ) 
 ```
 
@@ -17,8 +17,8 @@ maven:
 ```xml
  <dependency>
   <groupId>net.rosien</groupId>
-  <artifactId>sniff_2.9.1</artifactId> 
-  <version>0.8</version>
+  <artifactId>sniff_2.9.2</artifactId> 
+  <version>0.9</version>
   <scope>test</scope>
 </dependency>
 ```
