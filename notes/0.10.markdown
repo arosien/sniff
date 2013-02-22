@@ -1,0 +1,1 @@
+* fix 'NoReturn smell to not match scaladoc. Fixes #11.
