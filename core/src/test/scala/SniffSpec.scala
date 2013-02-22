@@ -13,8 +13,7 @@ import Language._
 object SpecIgnores {
   implicit val ignores = Ignores(
       Ignore('NoURL,                      """SniffSpec.scala$""".r),
-      Ignore('NoJavaDeprecatedAnnotation, "src/main/scala/smells.scala"),
-      Ignore('NoReturn,                   "src/main/scala/smells.scala"))
+      Ignore('NoJavaDeprecatedAnnotation, "src/main/scala/smells.scala"))
 }
 
 class MetaSpec extends Specification {
