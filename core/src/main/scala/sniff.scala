@@ -28,6 +28,7 @@ package object sniff {
    *   val smell: Smell
    *   (file, smell) must smellNice
    * }}}
+   * @return matcher for a file sniffed against some smells
    */
   def smellNice: Matcher[(File, Smell)] = new SmellsNiceMatcher
   private[sniff] def getFileTree(f: File): Stream[File] = f #:: (if (f.isDirectory) f.listFiles().toStream.flatMap(getFileTree) else Stream.empty)
