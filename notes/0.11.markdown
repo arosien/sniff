@@ -1,0 +1,1 @@
+* Remove problematic 'NoReturn smell for Scala. Need a real parser for that.
