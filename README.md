@@ -8,7 +8,7 @@ sbt:
 
 ```scala
 libraryDependencies ++= Seq(
-  "net.rosien" %% "sniff" % "0.9" % "test"
+  "net.rosien" %% "sniff" % "0.10" % "test"
 ) 
 ```
 
@@ -18,7 +18,7 @@ maven:
  <dependency>
   <groupId>net.rosien</groupId>
   <artifactId>sniff_2.9.2</artifactId> 
-  <version>0.9</version>
+  <version>0.10</version>
   <scope>test</scope>
 </dependency>
 ```
