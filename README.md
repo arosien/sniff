@@ -133,3 +133,7 @@ For more complex rules and deeper analysis, try these great tools:
 * Magic token to ignore smells on a line or in a region, e.g., for use in commented-out code.
 * Executable jar to sniff stuff from the command-line, e.g., for use in continuous integration systems.
 * Sniff helper method for maven-style paths (src/main/scala, etc.)
+
+# License
+
+The license is Apache 2.0, see LICENSE-2.0.txt.
