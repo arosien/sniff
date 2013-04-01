@@ -6,11 +6,11 @@ object Builds extends sbt.Build {
   import sbtbuildinfo.Plugin._
   import ls.Plugin.{lsSettings,LsKeys}
 
-  lazy val buildSettings = Defaults.defaultSettings ++ releaseSettings ++ Seq( 
+  lazy val buildSettings = Defaults.defaultSettings ++ releaseSettings ++ Seq(
     organization := "net.rosien",
-    scalaVersion := "2.9.1",
-    crossScalaVersions := Seq("2.9.1", "2.9.2", "2.10.0"),
-    scalacOptions ++= Seq("-deprecation", "-unchecked"),
+    scalaVersion := "2.9.2",
+    crossScalaVersions := Seq("2.9.2", "2.10.1"),
+    scalacOptions ++= Seq("-deprecation", "-unchecked", "-Xfatal-warnings"),
     publishArtifact in Test := false,
     publishMavenStyle := true,
     publishTo <<= version { v: String =>
@@ -46,8 +46,8 @@ object Builds extends sbt.Build {
   lazy val root = Project("sniff", file("."),
     settings = buildSettings ++ lsSettings ++ Seq(
       name := "sniff",
-      description := "Keep your code fresh smelling: generate bad code smells specs2 specifications for any source language",
-      LsKeys.tags in LsKeys.lsync := Seq("test", "specs2", "code smells")
+      description := "Keep your code fresh smelling: generate bad code smell detectors for any source language",
+      LsKeys.tags in LsKeys.lsync := Seq("test", "code smells")
     )) aggregate(app, core) dependsOn(core)
 
   lazy val app = Project("sniff-app", file("app"),
@@ -62,8 +62,9 @@ object Builds extends sbt.Build {
       sourceGenerators in Compile <+= buildInfo,
       buildInfoPackage := "net.rosien.sniff",
       libraryDependencies ++= Seq(
-        "org.specs2" %% "specs2" % "1.12.3",
-        "org.scalaz" %% "scalaz-core" % "6.0.4"
+        "org.scalaz"    %% "scalaz-core"    % "6.0.4",
+        "org.specs2"    %% "specs2"         % "1.12.3" % "test",
+        "org.typelevel" %% "scalaz6-specs2" % "0.1"    % "test"
       )
-    )) 
+    ))
 }

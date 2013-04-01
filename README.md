@@ -1,4 +1,4 @@
-Keeps your code fresh smelling: generate bad code smells specs2 specifications for any source language.
+Keeps your code fresh smelling: generate bad code smells smell detectors for any source language.
 
 # Installation
 

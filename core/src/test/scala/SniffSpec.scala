@@ -1,14 +1,11 @@
 package net.rosien.sniff
 
 import org.specs2.Specification
-import org.specs2.reporter.Notifier
-import org.specs2.runner.ClassRunner
-import org.specs2.reporter.Reporter
-import org.specs2.reporter.NotifierReporter
-import org.specs2.execute.Details
-import org.specs2.matcher.MustThrownMatchers
+import org.specs2.scalaz.ValidationMatchers
 import java.io.File
 import Language._
+import scalaz._
+import Scalaz._
 
 object SpecIgnores {
   implicit val ignores = Ignores(
@@ -16,36 +13,43 @@ object SpecIgnores {
       Ignore('NoJavaDeprecatedAnnotation, "src/main/scala/smells.scala"))
 }
 
-class MetaSpec extends Specification {
+class MetaSpec extends Specification with ValidationMatchers {
   import SpecIgnores._
-  
-  def is = "Sniff should not smell" ^ Scala.snippets.sniff("core/src/main/scala", "core/src/test/scala")
-}
 
+  def is = "Sniff should not smell" ! fresh
+
+  def fresh = {
+    val sniffs = Scala.snippets.sniff("core/src/main/scala", "core/src/test/scala").map(_.sniff.liftFailNel)
+
+    (sniffs must not beEmpty) and
+    (sniffs.sequence[`ValidationNEL[Stink]`, FileSmell] must beSuccessful)
+  }
+}
+/*
 class ReadmeSpec extends Specification {
   def is = "README examples compile" ^
       "usage"     ! usage ^
       "ignores"   ! ignores ^
       "my smells" ! mySmells ^
       end
-      
+
   def usage = {
     val spec = "Scala code shouldn't smell" ^ Scala.snippets.sniff("src/main/scala", "src/test/scala")
     success
   }
-  
+
   def ignores = {
     implicit val ignore = Ignores(
       Ignore('NoURL, "src/test/scala/SniffSpec.scala"))
     success
   }
-  
+
   def mySmells = {
-    val mySmells = 
+    val mySmells =
         Smell('NoMutableCollections, """scala\.collection\.mutable""".r, rationale = "Immutable is better than mutable. - El Jefe", Scala, 'movieReferences) ::
         // more smells
         Nil
-    class SniffSpec extends Specification { 
+    class SniffSpec extends Specification {
       def is = "Die smells die" ^ CodeSnippets(Scala, mySmells: _*).sniff("src/main/scala", "src/test/scala")
     }
     success
@@ -57,40 +61,15 @@ class SniffSpec extends Specification with MustThrownMatchers {
       "Scala Language converts to snippets"      ! snippets().langConvertsToSnippets ^
       "Scala snippets should pass"               ! snippets().allPass ^
       "Snippets without ignores fails for NoURL" ! snippets().oneFailsWithoutIgnores ^
-      "FilesNamed scans specific file"           ! snippets().filesNamed ^ 
+      "FilesNamed scans specific file"           ! snippets().filesNamed ^
       end
-  
-  // TODO: I'm sure there's a better way to do this.
-  class CollectingSpecRunner extends ClassRunner with Notifier {
-    override lazy val reporter: Reporter = new NotifierReporter {
-      val notifier = CollectingSpecRunner.this
-    }
-    
-    import scala.collection.mutable
-    var successes = 0
-    var fails     = 0
-    var skipped   = 0
-
-    def specStart(title: String, location: String) {}
-    def specEnd(title: String, location: String) {}
-    def contextStart(text: String, location: String) {}
-    def contextEnd(text: String, location: String) {}
-    def text(text: String, location: String) {}
-    def exampleStarted(name: String, location: String) {}
-    def exampleSuccess(name: String, duration: Long) = successes += 1
-    def exampleFailure(name: String, message: String, location: String, f: Throwable, details: Details, duration: Long) = fails += 1
-    def exampleError  (name: String, message: String, location: String, f: Throwable, duration: Long) {}
-    def exampleSkipped(name: String, message: String, duration: Long) = skipped += 1
-    def examplePending(name: String, message: String, duration: Long) {}
-  }
 
   case class snippets() {
     def spec(snippets: CodeSnippets, dirs: Path*)(implicit ignores: Ignores) = new Specification {
       val is = "Code shouldn't smell" ^ snippets.sniff(dirs: _*)
     }
 
-    val runner = new CollectingSpecRunner
-    val numFiles = getFileTree(new File("core/src/main/scala")).filter(Scala.fileFilter).size + 
+    val numFiles = getFileTree(new File("core/src/main/scala")).filter(Scala.fileFilter).size +
         getFileTree(new File("core/src/test/scala")).filter(Scala.fileFilter).size
 
     def langConvertsToSnippets = Scala.snippets.smells must not be empty
@@ -119,6 +98,7 @@ class SniffSpec extends Specification with MustThrownMatchers {
       runner.fails must_== 1
       runner.skipped must_== 0
     }
-    
+
   }
 }
+*/
